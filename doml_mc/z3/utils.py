@@ -24,7 +24,7 @@ def assert_relation_tuples(
     rel: FuncDeclRef,
     solver: Solver,
     rel_tpls: list[list[str]],
-    *args: dict[str, DatatypeRef]
+    *sig_dicts: dict[str, DatatypeRef]
 ) -> None:
     """
     ### Parameters
@@ -32,7 +32,7 @@ def assert_relation_tuples(
      - `solver` is the Z3 solver on which to assert;
      - `rel_tpls` is a list of lists of names of symbols which are related in
        `rel`;
-    The remaining arguments are the domains of `rel`.
+     - `sig_dicts` are the domains of `rel`.
 
     ### Effects
     This procedure is effectful on `solver`.
@@ -43,11 +43,11 @@ def assert_relation_tuples(
     lengths = [len(tpl) for tpl in rel_tpls]
     if lengths:
         assert min(lengths) == max(lengths)
-        assert lengths[0] == len(args)
+        assert lengths[0] == len(sig_dicts)
 
-    for doms_tpl in map(list, product(*args)):
+    for doms_tpl in map(list, product(*sig_dicts)):
         doms_tpl = cast(list[str], doms_tpl)
-        sym_tpl = [dom[sym_name] for sym_name, dom in zip(doms_tpl, args)]
+        sym_tpl = [dom[sym_name] for sym_name, dom in zip(doms_tpl, sig_dicts)]
         if doms_tpl in rel_tpls:
             solver.append(rel(*sym_tpl))
         else:
@@ -58,7 +58,7 @@ def assert_function_tuples(
     f: FuncDeclRef,
     solver: Solver,
     f_tpls: list[list[str]],
-    *args: dict[str, DatatypeRef]
+    *sig_dicts: dict[str, DatatypeRef]
 ) -> None:
     """
     ### Parameters
@@ -66,8 +66,7 @@ def assert_function_tuples(
      - `solver` is the Z3 solver on which to assert;
      - `f_tpls` is a list of tuples of Z3 symbols. The first elements in each
        tuple are the inputs of `f`, and the last element is its output;
-    The remaining arguments are the domains of `f`, the last one being its
-    codomain.
+     - `sig_dicts` are the domains of `f`, the last one being its codomain.
 
     ### Effects
     This procedure is effectful on `solver`.
@@ -78,9 +77,9 @@ def assert_function_tuples(
     lengths = [len(tpl) for tpl in f_tpls]
     if lengths:
         assert min(lengths) == max(lengths)
-        assert lengths[0] == len(args)
+        assert lengths[0] == len(sig_dicts)
 
     for f_tpl in f_tpls:
-        sym_tpl = [dom[sym_name] for sym_name, dom in zip(f_tpl, args)]
+        sym_tpl = [dom[sym_name] for sym_name, dom in zip(f_tpl, sig_dicts)]
         *xs, y = sym_tpl
         solver.append(f(*xs) == y)

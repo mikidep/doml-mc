@@ -1,18 +1,18 @@
 import itertools
 
 from z3 import (
-    EnumSort,
-    Function,
-    DatatypeSortRef,
-    DatatypeRef,
-    FuncDeclRef,
-    Solver,
+    BoolSort,
     Const,
-    Not,
+    DatatypeRef,
+    DatatypeSortRef,
+    EnumSort,
+    FuncDeclRef,
+    Function,
     Implies,
     IntSort,
-    BoolSort,
+    Not,
     sat,
+    Solver,
 )
 
 

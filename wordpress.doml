@@ -1,0 +1,263 @@
+doml wordpress
+
+application app {
+    dbms database {
+        provides {
+                SQL_interface
+        }
+        properties {
+            identifier     = "education";
+            engine         = "postgres";
+            engine_version = "13.1";
+            username       = "danilo";
+            password       = "passw0rd";
+            name           = "wp_db";
+        }
+    }
+
+    software_component wordPressServer {
+        consumes {
+            SQL_interface
+        }
+    }
+}
+
+infrastructure infra {
+    container container1 { }
+    container container2 { }
+    cont_image container1_image {
+        generates container1, container2
+    }
+    vm wp_vm1 {
+        ifaces {
+            iface i1 {
+                address "10.0.1.3"
+                belongsTo net1
+            }
+        }
+    }
+    vm wp_vm2 {
+        ifaces {
+            iface i2 {
+                address "10.0.1.1"
+                belongsTo net1
+            }
+        }
+    }
+    vm dbms_vm {
+        ifaces {
+            iface i3 {
+                address "10.0.1.2"
+                belongsTo net1
+            }
+        }
+    }
+    net net1 {
+        address "10.0.1.0/24"
+        protocol "tcp/ip"
+    }
+    autoscale_group g1 { wp_vm1, wp_vm2 }
+}
+
+// Maybe it would be clearer to put these relationships in the object definitions.
+// E.g. we could have "hosted_on wp_vm1" in container1
+deployment config1 {
+    container1 -> wp_vm1,
+    container2 -> wp_vm2,
+    wordPressServer -> container1,
+    wordPressServer -> container2,
+    database -> dbms_vm
+}
+
+active config1
+
+concretizations {
+    concrete_infrastructure con_infra1 {
+        provider aws {
+            vm_image ubuntu_ami {
+                properties {
+                    most_recent = true;
+                    name_regex = "ubuntu*";
+                    owners = ["099720109477"]; // Canonical
+                }
+            }
+
+            vm concrete_vm1 {
+                properties {
+                    ami = "ubuntu_ami";
+                    instance_type = "t2.micro";
+                }
+                maps wp_vm1
+            }
+
+            vm concrete_vm2 {
+                properties {
+                    ami = "ubuntu_ami";
+                    instance_type = "t2.large";
+                }
+                maps wp_vm2
+            }
+
+            vm concrete_dbms_vm {
+                properties {
+                    ami = "ubuntu_ami";
+                    instance_type = "db.t3.micro";
+                    allocated_storage = 1;
+                    vpc_security_group_ids = ?;
+                    db_subnet_group_name   = "concrete_net";
+                    publicly_accessible    = true;
+                    skip_final_snapshot    = true;
+                }
+                maps dbms_vm
+            }
+
+            net vpc_network {
+                properties {
+                    cidr = "10.0.0.0/16";
+                    name = "piacere_vpc";
+                }
+            }
+
+            subnet concrete_net {
+                properties {
+                    cidr_block => net1;
+                    vpc_id = "vpc_network";
+                    name = "piacere_subnet";
+                }
+                maps net1
+            }
+        }
+        provider docker {
+            cont_image concrete_wp_image {
+                properties {
+                    name = wordpress;
+                    image = wordpress:5.8.0;
+                    ports = "8080:80";
+                    env {
+                        WORDPRESS_DB_HOST => infra.dbms_vm;
+                        WORDPRESS_DB_USER => app.database.username;
+                        WORDPRESS_DB_PASSWORD => app.database.password;
+                        WORDPRESS_DB_NAME => app.database.name;
+                    }
+                }
+                maps container1_image
+            }
+        }
+    }
+
+    concrete_infrastructure con_infra2 {
+        provider gcp {
+            vm concrete_vm1 {
+                properties {
+                    name         = "{{ name }}";
+                    machine_type = "{{ machine_type }}";
+                    zone         = "{{ zone }}";
+
+                    boot_disk {
+                        initialize_params {
+                            image = "debian-cloud/debian-9";
+                        }
+                    }
+
+                    scratch_disk {
+                        interface = "SCSI";
+                    }
+
+                    network_interface {
+                        network = "default";
+                        access_config { }
+                    }
+                }
+                maps wp_vm1
+            }
+
+            vm concrete_vm2 {
+                properties {
+                    name         = "{{ name }}";
+                    machine_type = "{{ machine_type }}";
+                    zone         = "{{ <zone> }}";
+
+                    boot_disk {
+                        initialize_params {
+                            image = "debian-cloud/debian-9";
+                        }
+                    }
+
+                    scratch_disk {
+                        interface = "SCSI";
+                    }
+
+                    network_interface {
+                        network = "default";
+                        access_config { }
+                    }
+                }
+                maps wp_vm2
+            }
+
+            vm concrete_dbms_vm {
+                properties {
+                    name         = "{{ name }}";
+                    machine_type = "{{ machine_type }}";
+                    zone         = "{{ zone }}";
+
+                    boot_disk {
+                        initialize_params {
+                            image = "debian-cloud/debian-9";
+                        }
+                    }
+
+                    scratch_disk {
+                        interface = "SCSI";
+                    }
+
+                    network_interface {
+                        network = "default";
+                        access_config { }
+                    }
+
+                    settings {
+                       tier = "{{ tier }}";
+                    }
+                    deletion_protection  = "{{ deletion_protection }}";
+                }
+                maps dbms_vm
+            }
+
+            net vpc_network {
+                properties {
+                    name = "{{ network }}"
+                }
+            }
+
+            subnet concrete_net {
+                properties {
+                    name = "{{ subnetwork }}";
+                    ip_cidr_range => net1;
+                    region = "us-central1";
+                    network = "vpc_network";
+                }
+                maps net1
+            }
+        }
+        provider docker {
+            cont_image concrete_wp_image {
+                properties {
+                    name = wordpress;
+                    image = wordpress:5.8.0;
+                    ports = "8080:80";
+                    env {
+                        WORDPRESS_DB_HOST => infra.dbms_vm;
+                        WORDPRESS_DB_USER => app.database.username;
+                        WORDPRESS_DB_PASSWORD => app.database.password;
+                        WORDPRESS_DB_NAME => app.database.name;
+                    }
+                }
+                maps container1_image
+            }
+        }
+    }
+
+    active con_infra1
+
+}
