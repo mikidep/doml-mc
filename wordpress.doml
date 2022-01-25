@@ -3,7 +3,7 @@ doml wordpress
 application app {
     dbms database {
         provides {
-                SQL_interface
+            SQL_interface
         }
         properties {
             identifier     = "education";

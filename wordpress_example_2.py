@@ -1,20 +1,27 @@
+from ipaddress import ip_address, ip_network
+
 from z3 import (
     And,
     BoolSort,
+    Const,
     Consts,
+    Datatype,
     Exists,
     ForAll,
     Function,
     Implies,
+    IntSort,
     Or,
     sat,
     Solver,
 )
 
 from doml_mc.z3.utils import (
-    assert_relation_tuples,
-    mk_enum_sort_dict,
     assert_function_tuples,
+    assert_relation_tuples,
+    Iff,
+    mk_enum_sort_dict,
+    mk_stringsym_sort,
 )
 
 solver = Solver()
@@ -108,6 +115,138 @@ assert_function_tuples(
     class_,
 )
 
+##################
+#   PROPERTIES   #
+##################
+
+ss_sort, ss = mk_stringsym_sort(
+    [
+        "099720109477",
+        "13.1",
+        "SCSI",
+        "concrete_net",
+        "danilo",
+        "db.t3.micro",
+        "debian-cloud/debian-9",
+        "default",
+        "education",
+        "hosted_on wp_vm1",
+        "passw0rd",
+        "piacere_subnet",
+        "piacere_vpc",
+        "postgres",
+        "t2.large",
+        "t2.micro",
+        "tcp/ip",
+        "ubuntu*",
+        "ubuntu_ami",
+        "us-central1",
+        "vpc_network",
+        "wp_db",
+    ]
+)
+
+AData = Datatype("AttributeData")
+AData.declare("int", ("get_int", IntSort()))
+AData.declare("bool", ("get_bool", BoolSort()))
+AData.declare("ss", ("get_ss", ss_sort))
+AData = AData.create()
+
+attr_sort, attr = mk_enum_sort_dict(
+    "Attribute",
+    [
+        "DBMS::identifier",
+        "DBMS::engine",
+        "DBMS::engine_version",
+        "DBMS::username",
+        "DBMS::password",
+        "DBMS::name",
+        "NetworkInterface::address",
+        "Network::address_lb",
+        "Network::address_ub",
+        "Network::protocol",
+    ],
+)
+
+attr_rel = Function("attribute", elem_sort, attr_sort, AData, BoolSort())
+
+a = Const("a", attr_sort)
+d = Const("d", AData)
+solver.append(
+    ForAll(
+        [a, d],
+        And(
+            Iff(
+                attr_rel(elem["database"], a, d),
+                Or(
+                    And(
+                        a == attr["DBMS::identifier"],
+                        d == AData.ss(ss["education"]),
+                    ),
+                    And(
+                        a == attr["DBMS::engine"],
+                        d == AData.ss(ss["postgres"]),
+                    ),
+                    And(
+                        a == attr["DBMS::engine_version"],
+                        d == AData.ss(ss["13.1"]),
+                    ),
+                    And(
+                        a == attr["DBMS::username"],
+                        d == AData.ss(ss["danilo"]),
+                    ),
+                    And(
+                        a == attr["DBMS::password"],
+                        d == AData.ss(ss["passw0rd"]),
+                    ),
+                    And(
+                        a == attr["DBMS::name"],
+                        d == AData.ss(ss["wp_db"]),
+                    ),
+                ),
+            ),
+            Iff(
+                attr_rel(elem["i1"], a, d),
+                And(
+                    a == attr["NetworkInterface::address"],
+                    d == AData.int(int(ip_address("10.0.1.3"))),
+                ),
+            ),
+            Iff(
+                attr_rel(elem["i2"], a, d),
+                And(
+                    a == attr["NetworkInterface::address"],
+                    d == AData.int(int(ip_address("10.0.1.1"))),
+                ),
+            ),
+            Iff(
+                attr_rel(elem["i3"], a, d),
+                And(
+                    a == attr["NetworkInterface::address"],
+                    d == AData.int(int(ip_address("10.0.1.2"))),
+                ),
+            ),
+            Iff(
+                attr_rel(elem["net1"], a, d),
+                Or(
+                    And(
+                        a == attr["Network::address_lb"],
+                        d == AData.int(int(ip_network("10.0.1.0/24")[0])),
+                    ),
+                    And(
+                        a == attr["Network::address_ub"],
+                        d == AData.int(int(ip_network("10.0.1.0/24")[-1])),
+                    ),
+                    And(
+                        a == attr["Network::protocol"],
+                        d == AData.ss(ss["tcp/ip"]),
+                    ),
+                ),
+            ),
+        ),
+    )
+)
+
 ####################
 #   ASSOCIATIONS   #
 ####################
@@ -189,7 +328,7 @@ assert_relation_tuples(
 spp, spc, i, n, ni, cn, c, d, dc = Consts(
     "spp spc i n ni cn c d dc", elem_sort
 )
-prop = ForAll(
+attr = ForAll(
     [spp, spc, i],
     Implies(
         And(
@@ -255,7 +394,7 @@ prop = ForAll(
         ),
     ),
 )
-solver.assert_and_track(prop, "software_package_iface_net")
+solver.assert_and_track(attr, "software_package_iface_net")
 
 
 ###############
