@@ -1,0 +1,205 @@
+commons:
+    DOMLElement:
+        attributes:
+            name:
+                type: String
+                multiplicity: "1"
+            description:
+                type: String
+                multiplicity: "0..1"
+    Configuration:
+        superclass: commons_DOMLElement
+        associations:
+            deployments:
+                type: commons_Deployment
+                multiplicity: "0..*"
+    Deployment:
+        associations:
+            source:
+                type: application_ApplicationComponent
+                multiplicity: "1"
+            target:
+                type: infrastructure_InfrastructureElement
+                multiplicity: "1"
+
+application:
+    ApplicationComponent:
+        superclass: commons_DOMLElement
+    SoftwarePackage:
+        superclass: application_ApplicationComponent
+        attributes:
+            isPersistent:
+                type: Boolean
+                multiplicity: "1"
+                default: false
+        associations:
+            exposedInterfaces:
+                type: application_SoftwareInterface
+                mutiplicity: "0..*"
+            consumedInterfaces:
+                type: application_SoftwareInterface
+                mutiplicity: "0..*"
+    SaaS:
+        superclass: application_ApplicationComponent
+        associations:
+            exposedInterfaces:
+                type: application_SoftwareInterface
+                mutiplicity: "0..*"
+    SoftwareInterface:
+        superclass: application_ApplicationComponent
+        attributes:
+            endPoint:
+                type: String
+                multiplicity: "1"
+    DBMS:
+        superclass: application_SoftwarePackage
+    SaaSDBMS:
+        superclass: application_SaaS
+
+infrastructure:
+    InfrastructureElement:
+        superclass: commons_DOMLElement
+    ComputingNode:
+        superclass: infrastructure_InfrastructuralElement
+        attributes:
+            architecture: 
+                type: String 
+                multiplicity: "0..1"
+            os: 
+                type: String 
+                multiplicity: "0..1"
+            memory: 
+                type: String 
+                multiplicity: "0..1"
+            storage: 
+                type: String 
+                multiplicity: "0..1"
+            cpu: 
+                type: String 
+                multiplicity: "0..1"
+            cost: 
+                type: Integer  # in cents 
+                multiplicity: "0..1"
+        associations:
+            group:
+                type: infrastructure_AutoScalingGroup
+                multiplicity: "0..1"
+            ifaces:
+                type: infrastructure_NetworkInterface
+                multiplicity: "0..*"
+            location:
+                type: infrastructure_Location
+                multiplicity: "0..1"
+    PhysicalComputingNode:
+        superclass: infrastructure_ComputingNode
+    VirtualMachine:
+        superclass: infrastructure_ComputingNode
+        attributes:
+            sizeDescription:
+                type: String
+                multiplicity: "0..1"
+        associations:
+            generatedFrom:
+                type: infrastructure_VMImage
+                multiplicity: "0..1"
+            location:
+                type: infrastructure_Location
+                multiplicity: "0..1"
+    Location:
+        superclass: commons_DOMLElement
+        attributes:
+            region:
+                type: String
+                multiplicity: "1"
+            zone:
+                type: String
+                multiplicity: "0..1"
+    Container:
+        superclass: infrastructure_ComputingNode
+        associations:
+            generatedFrom:
+                type: infrastructure_ContainerImage
+                multiplicity: "0..1"
+            host:
+                type: infrastructure_ComputingNode
+                multiplicity: "1"
+    ComputingNodeGenerator:
+        superclass: commons_DOMLElement
+        attributes:
+            uri:
+                type: String
+                multiplicity: "0..1"
+            kind:
+                type: GeneratorKind  # enum { SCRIPT, IMAGE }
+    VMImage:
+        superclass: infrastructure_ComputingNodeGenerator
+        associations:
+            generatedVMs:  # inverse of infrastructure_VirtualMachine::generatedFrom?
+                type: infrastructure_VirtualMachine
+                multiplicity: "0..*"
+    ContainerImage:
+        superclass: infrastructure_ComputingNodeGenerator
+        associations:
+            generatedContainers:  # inverse of infrastructure_Container::generatedFrom?
+                type: infrastructure_Container
+                multiplicity: "0..*"
+    AutoScalingGroup:
+        superclass: commons_DOMLElement
+        associations:
+            # runtimeProvider
+            groupedNodes:  # inverse of infrastructure_ComputingNode::group?
+                type: infrastructure_ComputingNode
+                multiplicity: "0..*"
+    Storage:
+        superclass: infrastructure_InfrastructureElement
+        attributes:
+            storage:
+                type: Integer  # in MBs
+                multiplicity: "0..1"
+            cost: 
+                type: Integer  # in cents 
+                multiplicity: "0..1"
+        associations:
+            ifaces:
+                type: infrastructure_NetworkInterface
+                multiplicity: "0..*"
+    Network:
+        superclass: commons_DOMLElement
+        attributes:
+            protocol:
+                type: String
+                multiplicity: "0..1"
+            address_lb:
+                type: Integer
+                multiplicity: "0..1"
+            address_ub:
+                type: Integer
+                multiplicity: "0..1"
+        associations:
+            connectedIfaces:  # inverse of infrastructure_NetworkInterface::belongsTo?
+                type: infrastructure_NetworkInterface
+                multiplicity: "0..*"
+            subnets: 
+                type: infrastructure_Subnet
+                multiplicity: "0..*"
+    Subnet:
+        superclass: infrastructure_Network
+    NetworkInterface:
+        superclass: infrastructure_InfrastructureElement
+        attributes:
+            endPoint:
+                type: Integer
+                multiplicity: "0..1"
+            speed:
+                type: String
+                multiplicity: "0..1"
+        associations:
+            belongsTo:
+                type: infrastructure_Network
+                multiplicity: "1"
+    Firewall:
+        superclass: infrastructure_DOMLElement
+        associations:
+            ifaces:
+                type: infrastructure_NetworkInterface
+                multiplicity: "0..*"

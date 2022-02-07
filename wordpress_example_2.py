@@ -116,7 +116,7 @@ assert_function_tuples(
 )
 
 ##################
-#   PROPERTIES   #
+#   ATTRIBUTES   #
 ##################
 
 ss_sort, ss = mk_stringsym_sort(
