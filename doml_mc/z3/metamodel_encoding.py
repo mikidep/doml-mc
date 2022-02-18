@@ -8,6 +8,7 @@ from z3 import (
     Consts,
     DatatypeRef,
     DatatypeSortRef,
+    Exists,
     ForAll,
     FuncDeclRef,
     Function,
@@ -79,13 +80,13 @@ def def_attribute_rel_and_assert_types(
     attr_rel = Function("attribute", elem_sort, attr_sort, AData, BoolSort())
     subclasses_dict = get_subclasses_dict(mm)
     es = Const("es", elem_sort)
-    ad = Const("ad", AData)
+    ad, ad_ = Consts("ad ad_", AData)
     # A type validity constraint is added for every attribute:
     for cname, c in mm.items():
         for mm_attr in c.attributes.values():
-            # For all source and target elements that are associated, their
-            # classes must be a subtype of the source and target classes resp.
-            # of the association.
+            # For all source elements and attribute data, their classes must be
+            # a subtype of the source class, and the data must be of the data
+            # type of the attribute.
             if mm_attr.type == "Boolean":
                 ad_assn = AData.is_bool(ad)  # type: ignore
             elif mm_attr.type == "Integer":
@@ -112,6 +113,38 @@ def def_attribute_rel_and_assert_types(
             solver.assert_and_track(
                 assn, f"attribute_st_types {cname}::{mm_attr.name}"
             )
+
+            # Multiplicity constraints
+            lb, ub = mm_attr.multiplicity
+            if lb == "1":
+                mult_lb_assn = ForAll(
+                    [es],
+                    Exists(
+                        [ad],
+                        attr_rel(es, attr[f"{cname}::{mm_attr.name}"], ad),
+                    ),
+                )
+                solver.assert_and_track(
+                    mult_lb_assn,
+                    f"attribute_mult_lb {cname}::{mm_attr.name}",
+                )
+            if ub == "1":
+                mult_ub_assn = ForAll(
+                    [es, ad, ad_],
+                    Implies(
+                        And(
+                            attr_rel(es, attr[f"{cname}::{mm_attr.name}"], ad),
+                            attr_rel(
+                                es, attr[f"{cname}::{mm_attr.name}"], ad_
+                            ),
+                        ),
+                        ad == ad_,
+                    ),
+                )
+                solver.assert_and_track(
+                    mult_ub_assn,
+                    f"attribute_mult_ub {cname}::{mm_attr.name}",
+                )
     return attr_rel
 
 
@@ -132,14 +165,14 @@ def def_association_rel_and_assert_types(
         "association", elem_sort, assoc_sort, elem_sort, BoolSort()
     )
     subclasses_dict = get_subclasses_dict(mm)
-    es, et = Consts("es et", elem_sort)
+    es, et, et_ = Consts("es et et_", elem_sort)
     # A type validity constraint is added for every association:
     for cname, c in mm.items():
         for mm_assoc in c.associations.values():
             # For all source and target elements that are associated, their
             # classes must be a subtype of the source and target classes resp.
             # of the association.
-            assn = ForAll(
+            type_assn = ForAll(
                 [es, et],
                 Implies(
                     assoc_rel(es, assoc[f"{cname}::{mm_assoc.name}"], et),
@@ -160,6 +193,40 @@ def def_association_rel_and_assert_types(
                 ),
             )
             solver.assert_and_track(
-                assn, f"association_st_types {cname}::{mm_assoc.name}"
+                type_assn, f"association_st_types {cname}::{mm_assoc.name}"
             )
+
+            # Multiplicity constraints
+            lb, ub = mm_assoc.multiplicity
+            if lb == "1":
+                mult_lb_assn = ForAll(
+                    [es],
+                    Exists(
+                        [et],
+                        assoc_rel(es, assoc[f"{cname}::{mm_assoc.name}"], et),
+                    ),
+                )
+                solver.assert_and_track(
+                    mult_lb_assn,
+                    f"association_mult_lb {cname}::{mm_assoc.name}",
+                )
+            if ub == "1":
+                mult_ub_assn = ForAll(
+                    [es, et, et_],
+                    Implies(
+                        And(
+                            assoc_rel(
+                                es, assoc[f"{cname}::{mm_assoc.name}"], et
+                            ),
+                            assoc_rel(
+                                es, assoc[f"{cname}::{mm_assoc.name}"], et_
+                            ),
+                        ),
+                        et == et_,
+                    ),
+                )
+                solver.assert_and_track(
+                    mult_ub_assn,
+                    f"association_mult_ub {cname}::{mm_assoc.name}",
+                )
     return assoc_rel
