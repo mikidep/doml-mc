@@ -1,3 +1,37 @@
+from time import perf_counter
+
+last_time: float = 0.0
+
+
+class bcolors:
+    HEADER = "\033[95m"
+    OKBLUE = "\033[94m"
+    OKCYAN = "\033[96m"
+    OKGREEN = "\033[92m"
+    WARNING = "\033[93m"
+    FAIL = "\033[91m"
+    ENDC = "\033[0m"
+    BOLD = "\033[1m"
+    UNDERLINE = "\033[4m"
+
+
+def tic():
+    global last_time
+    last_time = perf_counter()
+
+
+def toc_tic(label: str):
+    global last_time
+    toc = perf_counter()
+    print(
+        f"{bcolors.BOLD}{bcolors.OKGREEN}TOC! "
+        + f"{label}:{bcolors.ENDC} {toc - last_time} s."
+    )
+    last_time = toc
+
+
+tic()
+
 from ipaddress import ip_address, ip_network
 
 from z3 import (
@@ -13,8 +47,12 @@ from z3 import (
     IntSort,
     Or,
     sat,
+    set_param,
     Solver,
 )
+
+set_param("smt.macro_finder", True)
+
 
 from doml_mc.z3.utils import (
     assert_function_tuples,
@@ -24,7 +62,11 @@ from doml_mc.z3.utils import (
     mk_stringsym_sort_dict,
 )
 
+toc_tic("Imports")
+
 solver = Solver()
+
+toc_tic("Solver init")
 
 ############################
 #   ELEMENTS AND CLASSES   #
@@ -114,6 +156,8 @@ assert_function_tuples(
     elem,
     class_,
 )
+
+toc_tic("Elements and classes")
 
 ##################
 #   ATTRIBUTES   #
@@ -247,6 +291,8 @@ solver.append(
     )
 )
 
+toc_tic("Attributes")
+
 ####################
 #   ASSOCIATIONS   #
 ####################
@@ -318,6 +364,8 @@ assert_relation_tuples(
     assoc,
     elem,
 )
+
+toc_tic("Associations")
 
 ##########################
 #   EXAMPLE PROPERTIES   #
@@ -396,6 +444,7 @@ attr = ForAll(
 )
 solver.assert_and_track(attr, "software_package_iface_net")
 
+toc_tic("Example properties")
 
 ###############
 #   SOLVING   #
@@ -406,6 +455,10 @@ solver.assert_and_track(attr, "software_package_iface_net")
 is_sat = solver.check()
 print(is_sat)
 if is_sat == sat:
-    print(solver.model())
+    solver.model()
 else:
     print(solver.unsat_core())
+
+toc_tic("Solving")
+with open("sexpr.smt", "w") as sexprf:
+    sexprf.write(solver.sexpr())

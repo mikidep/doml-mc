@@ -1,7 +1,10 @@
-from typing import Any
+from typing import cast
+from collections.abc import Sequence
 from itertools import product
 
 from z3 import (
+    BoolVal,
+    ExprRef,
     DatatypeRef,
     DatatypeSortRef,
     EnumSort,
@@ -39,14 +42,16 @@ def assert_relation_tuples(
 
     # Length of tuples must me homogeneous and equal to the number of given
     # domains.
-    lengths = [len(tpl) for tpl in rel_tpls]
-    if lengths:
+    if lengths := [len(tpl) for tpl in rel_tpls]:
         assert min(lengths) == max(lengths)
         assert lengths[0] == len(sig_dicts)
 
     sym_tpls = [
-        [dom[sym_name] for sym_name, dom in zip(doms_tpl, sig_dicts)]
-        + [doms_tpl in rel_tpls]  # type: ignore
+        cast(
+            list[ExprRef],
+            [dom[sym_name] for sym_name, dom in zip(doms_tpl, sig_dicts)],
+        )
+        + [BoolVal(doms_tpl in rel_tpls)]
         for doms_tpl in map(list, product(*sig_dicts))
     ]
 
@@ -73,8 +78,7 @@ def assert_function_tuples(
 
     # Length of tuples must me homogeneous and equal to the number of given
     # domains.
-    lengths = [len(tpl) for tpl in f_tpls]
-    if lengths:
+    if lengths := [len(tpl) for tpl in f_tpls]:
         assert min(lengths) == max(lengths)
         assert lengths[0] == len(sig_dicts)
 
@@ -89,7 +93,7 @@ def assert_function_tuples(
 def assert_function_tuples_raw(
     f: FuncDeclRef,
     solver: Solver,
-    f_tpls: list[list[Any]],
+    f_tpls: Sequence[Sequence[ExprRef]],
 ) -> None:
     """
     ### Parameters
@@ -103,15 +107,14 @@ def assert_function_tuples_raw(
     This procedure is effectful on `solver`.
     """
     # Length of tuples must me homogeneous.
-    lengths = [len(tpl) for tpl in f_tpls]
-    if lengths:
+    if lengths := [len(tpl) for tpl in f_tpls]:
         assert min(lengths) == max(lengths)
 
     for *xs, y in f_tpls:
         solver.append(f(*xs) == y)
 
 
-def mk_stringsym_sort(
+def mk_stringsym_sort_dict(
     strings: list[str],
 ) -> tuple[DatatypeSortRef, dict[str, DatatypeRef]]:
     def symbolize(s: str) -> str:

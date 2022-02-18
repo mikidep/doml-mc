@@ -11,7 +11,83 @@ class Concretization:
     networks: dict[str, "Network"]
 
 
+@dataclass
+class Group:
+    name: str
+    typeId: str
+
+
+@dataclass
+class VirtualMachine:
+    name: str
+    maps: str
+    description: str
+
+
+@dataclass
+class Provider:
+    name: str
+    typeId: str
+    supportedGroups: list[str]
+    providedVMs: list[str]
+    storages: list[str]
+    providedNetworks: list[str]
+    description: str
+
+
+@dataclass
+class Storage:
+    name: str
+    typeId: str
+    maps: str
+
+
+@dataclass
+class Network:
+    name: str
+    typeId: str
+    maps: str
+
+
 def parse_concretization(doc: dict) -> Concretization:
+    def parse_group(doc: dict) -> Group:
+        return Group(
+            name=doc["name"],
+            typeId=doc["typeId"],
+        )
+
+    def parse_virtual_machine(doc: dict) -> VirtualMachine:
+        return VirtualMachine(
+            name=doc["name"],
+            maps=doc["maps"],
+            description=doc["description"],
+        )
+
+    def parse_provider(doc: dict) -> Provider:
+        return Provider(
+            name=doc["name"],
+            typeId=doc["typeId"],
+            supportedGroups=doc["supportedGroups"],
+            providedVMs=doc["providedVMs"],
+            storages=doc["storages"],
+            providedNetworks=doc["providedNetworks"],
+            description=doc["description"],
+        )
+
+    def parse_storage(doc: dict) -> Storage:
+        return Storage(
+            name=doc["name"],
+            typeId=doc["typeId"],
+            maps=doc["maps"],
+        )
+
+    def parse_network(doc: dict) -> Network:
+        return Network(
+            name=doc["name"],
+            typeId=doc["typeId"],
+            maps=doc["maps"],
+        )
+
     return Concretization(
         name=doc["name"],
         groups={gdoc["name"]: parse_group(gdoc) for gdoc in doc["groups"]},
@@ -28,85 +104,4 @@ def parse_concretization(doc: dict) -> Concretization:
         networks={
             ndoc["name"]: parse_network(ndoc) for ndoc in doc["networks"]
         },
-    )
-
-
-@dataclass
-class Group:
-    name: str
-    typeId: str
-
-
-def parse_group(doc: dict) -> Group:
-    return Group(
-        name=doc["name"],
-        typeId=doc["typeId"],
-    )
-
-
-@dataclass
-class VirtualMachine:
-    name: str
-    maps: str
-    description: str
-
-
-def parse_virtual_machine(doc: dict) -> VirtualMachine:
-    return VirtualMachine(
-        name=doc["name"],
-        maps=doc["maps"],
-        description=doc["description"],
-    )
-
-
-@dataclass
-class Provider:
-    name: str
-    typeId: str
-    supportedGroups: list[str]
-    providedVMs: list[str]
-    storages: list[str]
-    providedNetworks: list[str]
-    description: str
-
-
-def parse_provider(doc: dict) -> Provider:
-    return Provider(
-        name=doc["name"],
-        typeId=doc["typeId"],
-        supportedGroups=doc["supportedGroups"],
-        providedVMs=doc["providedVMs"],
-        storages=doc["storages"],
-        providedNetworks=doc["providedNetworks"],
-        description=doc["description"],
-    )
-
-
-@dataclass
-class Storage:
-    name: str
-    typeId: str
-    maps: str
-
-
-def parse_storage(doc: dict) -> Storage:
-    return Storage(
-        name=doc["name"],
-        typeId=doc["typeId"],
-        maps=doc["maps"],
-    )
-
-
-@dataclass
-class Network:
-    name: str
-    typeId: str
-    maps: str
-
-
-def parse_network(doc: dict) -> Network:
-    return Network(
-        name=doc["name"],
-        typeId=doc["typeId"],
-        maps=doc["maps"],
     )
