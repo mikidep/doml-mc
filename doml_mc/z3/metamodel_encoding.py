@@ -6,7 +6,6 @@ from z3 import (
     BoolSort,
     Const,
     Consts,
-    DatatypeRef,
     DatatypeSortRef,
     Exists,
     ForAll,
@@ -16,19 +15,21 @@ from z3 import (
     Or,
     Solver,
 )
-from ..intermediate_model.metamodel import DOMLClass
+from ..intermediate_model.types import MetaModel
+
+from .types import Refs, SortAndRefs
 from .utils import mk_enum_sort_dict
 
 
 def mk_class_sort_dict(
-    mm: dict[str, DOMLClass]
-) -> tuple[DatatypeSortRef, dict[str, DatatypeRef]]:
-    return mk_enum_sort_dict("Element", list(mm))
+    mm: MetaModel,
+) -> SortAndRefs:
+    return mk_enum_sort_dict("Class", list(mm))
 
 
 def mk_attribute_sort_dict(
-    mm: dict[str, DOMLClass]
-) -> tuple[DatatypeSortRef, dict[str, DatatypeRef]]:
+    mm: MetaModel,
+) -> SortAndRefs:
     atts = [
         f"{cname}::{aname}"
         for cname, c in mm.items()
@@ -38,8 +39,8 @@ def mk_attribute_sort_dict(
 
 
 def mk_association_sort_dict(
-    mm: dict[str, DOMLClass]
-) -> tuple[DatatypeSortRef, dict[str, DatatypeRef]]:
+    mm: MetaModel,
+) -> SortAndRefs:
     assocs = [
         f"{cname}::{aname}"
         for cname, c in mm.items()
@@ -48,7 +49,7 @@ def mk_association_sort_dict(
     return mk_enum_sort_dict("Association", assocs)
 
 
-def get_subclasses_dict(mm: dict[str, DOMLClass]) -> dict[str, set[str]]:
+def get_subclasses_dict(mm: MetaModel) -> dict[str, set[str]]:
     inherits_dg = nx.DiGraph(
         [
             (c.name, c.superclass)
@@ -64,14 +65,15 @@ def get_subclasses_dict(mm: dict[str, DOMLClass]) -> dict[str, set[str]]:
 
 
 def def_attribute_rel_and_assert_types(
-    mm: dict[str, DOMLClass],
+    mm: MetaModel,
     solver: Solver,
     attr_sort: DatatypeSortRef,
-    attr: dict[str, DatatypeRef],
-    class_: dict[str, DatatypeRef],
+    attr: Refs,
+    class_: Refs,
     elem_class_f: FuncDeclRef,
     elem_sort: DatatypeSortRef,
     AData: DatatypeSortRef,
+    ss: Refs,
 ) -> FuncDeclRef:
     """
     ### Effects
@@ -94,7 +96,10 @@ def def_attribute_rel_and_assert_types(
             elif mm_attr.type == "String":
                 ad_assn = AData.is_ss(ad)  # type: ignore
             else:  # mm_attr.type == "GeneratorKind"
-                ad_assn = AData.is_gen_kind(ad)  # type: ignore
+                ad_assn = Or(
+                    ad == AData.ss(ss["IMAGE"]),  # type: ignore
+                    ad == AData.ss(ss["SCRIPT"]),  # type: ignore
+                )
             assn = ForAll(
                 [es, ad],
                 Implies(
@@ -149,11 +154,11 @@ def def_attribute_rel_and_assert_types(
 
 
 def def_association_rel_and_assert_types(
-    mm: dict[str, DOMLClass],
+    mm: MetaModel,
     solver: Solver,
     assoc_sort: DatatypeSortRef,
-    assoc: dict[str, DatatypeRef],
-    class_: dict[str, DatatypeRef],
+    assoc: Refs,
+    class_: Refs,
     elem_class_f: FuncDeclRef,
     elem_sort: DatatypeSortRef,
 ) -> FuncDeclRef:

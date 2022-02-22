@@ -59,7 +59,7 @@ from doml_mc.z3.utils import (
     assert_relation_tuples,
     Iff,
     mk_enum_sort_dict,
-    mk_stringsym_sort_dict,
+    mk_stringsym_sort_from_strings,
 )
 
 toc_tic("Imports")
@@ -163,7 +163,7 @@ toc_tic("Elements and classes")
 #   ATTRIBUTES   #
 ##################
 
-ss_sort, ss = mk_stringsym_sort_dict(
+ss_sort, ss = mk_stringsym_sort_from_strings(
     [
         "099720109477",
         "13.1",

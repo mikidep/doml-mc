@@ -1,9 +1,13 @@
 from dataclasses import dataclass
-from typing import Literal, Optional
+from typing import Literal, Optional, Union
 
 from .._utils import merge_dicts
 
 Multiplicity = tuple[Literal["0", "1"], Literal["1", "*"]]
+
+
+class AttributeNotFound(Exception):
+    pass
 
 
 @dataclass
@@ -19,6 +23,7 @@ class DOMLAttribute:
     name: str
     type: Literal["Boolean", "Integer", "String", "GeneratorKind"]
     multiplicity: Multiplicity
+    default: Optional[Union[str, int, bool]]
 
 
 @dataclass
@@ -28,7 +33,10 @@ class DOMLAssociation:
     multiplicity: Multiplicity
 
 
-def parse_metamodel(mmdoc: dict) -> dict[str, DOMLClass]:
+MetaModel = dict[str, DOMLClass]
+
+
+def parse_metamodel(mmdoc: dict) -> MetaModel:
     def parse_class(cname: str, cdoc: dict) -> DOMLClass:
         def parse_mult(
             mults: Literal["0..1", "0..*", "1", "1..*"]
@@ -62,6 +70,7 @@ def parse_metamodel(mmdoc: dict) -> dict[str, DOMLClass]:
                 name=aname,
                 type=type_,
                 multiplicity=parse_mult(mults),
+                default=adoc.get("default"),
             )
 
         def parse_association(aname: str, adoc: dict) -> DOMLAssociation:
@@ -86,7 +95,7 @@ def parse_metamodel(mmdoc: dict) -> dict[str, DOMLClass]:
             },
             associations={
                 aname: parse_association(aname, adoc)
-                for aname, adoc in cdoc.get("association", {}).items()
+                for aname, adoc in cdoc.get("associations", {}).items()
             },
         )
 
@@ -94,8 +103,49 @@ def parse_metamodel(mmdoc: dict) -> dict[str, DOMLClass]:
 
     return merge_dicts(
         {
-            f"{prefix}_{cname}": parse_class(f"{prefix}_{cname}", cdoc)
+            prefixed_name: parse_class(prefixed_name, cdoc)
             for cname, cdoc in csdoc.items()
+            for prefixed_name in [f"{prefix}_{cname}"]
         }
         for prefix, csdoc in mmdoc.items()
     )
+
+
+def _find_attribute_class(
+    mm: MetaModel,
+    cname: str,
+    aname: str,
+) -> DOMLClass:
+    c = mm[cname]
+    if aname in c.attributes:
+        return c
+    elif c.superclass is None:
+        raise AttributeNotFound(
+            f"Attribute {aname} not found in subclasses of {cname}."
+        )
+    else:
+        return _find_attribute_class(mm, c.superclass, aname)
+
+
+def get_mangled_attribute_name(
+    mm: MetaModel,
+    cname: str,
+    aname: str,
+) -> str:
+    return f"{_find_attribute_class(mm, cname, aname).name}::{aname}"
+
+
+def get_mangled_attribute_defaults(
+    mm: MetaModel,
+    cname: str,
+) -> dict[str, Union[str, int, bool]]:
+    c = mm[cname]
+    defaults = {
+        f"{cname}::{aname}": a.default
+        for aname, a in c.attributes.items()
+        if a.default is not None
+    }
+    if c.superclass is None:
+        return defaults
+    else:
+        return get_mangled_attribute_defaults(mm, c.superclass) | defaults

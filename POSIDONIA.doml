@@ -192,22 +192,6 @@
             {
                 "typeId": "infrastructure_AutoScalingGroup",
                 "name": "EdiASG"
-            },
-            {
-                "typeId": "infrastructure_SecurityGroup",
-                "name": "BalearesDBSG"
-            },
-            {
-                "typeId": "infrastructure_SecurityGroup",
-                "name": "BalearesSG"
-            },
-            {
-                "typeId": "infrastructure_SecurityGroup",
-                "name": "BalearesELBSG"
-            },
-            {
-                "typeId": "infrastructure_SecurityGroup",
-                "name": "CheckmkSG"
             }
         ]
     },

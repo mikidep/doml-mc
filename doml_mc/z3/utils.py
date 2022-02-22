@@ -3,19 +3,21 @@ from collections.abc import Sequence
 from itertools import product
 
 from z3 import (
+    BoolSort,
     BoolVal,
-    ExprRef,
-    DatatypeRef,
+    Datatype,
     DatatypeSortRef,
+    ExprRef,
     EnumSort,
     FuncDeclRef,
+    IntSort,
     Solver,
 )
 
+from .types import Refs, SortAndRefs
 
-def mk_enum_sort_dict(
-    name: str, values: list[str]
-) -> tuple[DatatypeSortRef, dict[str, DatatypeRef]]:
+
+def mk_enum_sort_dict(name: str, values: list[str]) -> SortAndRefs:
     """Makes a Z3 sort and a dict indexing sort values by their name"""
 
     sort, dtrefs = EnumSort(name, values)
@@ -26,7 +28,7 @@ def assert_relation_tuples(
     rel: FuncDeclRef,
     solver: Solver,
     rel_tpls: list[list[str]],
-    *sig_dicts: dict[str, DatatypeRef],
+    *sig_dicts: Refs,
 ) -> None:
     """
     ### Parameters
@@ -62,7 +64,7 @@ def assert_function_tuples(
     f: FuncDeclRef,
     solver: Solver,
     f_tpls: list[list[str]],
-    *sig_dicts: dict[str, DatatypeRef],
+    *sig_dicts: Refs,
 ) -> None:
     """
     ### Parameters
@@ -114,9 +116,9 @@ def assert_function_tuples_raw(
         solver.append(f(*xs) == y)
 
 
-def mk_stringsym_sort_dict(
+def mk_stringsym_sort_from_strings(
     strings: list[str],
-) -> tuple[DatatypeSortRef, dict[str, DatatypeRef]]:
+) -> SortAndRefs:
     def symbolize(s: str) -> str:
         return "".join([c.lower() if c.isalnum() else "_" for c in s[:16]])
 
@@ -126,6 +128,16 @@ def mk_stringsym_sort_dict(
         s: ss_refs_dict[ss] for s, ss in zip(strings, ss_list)
     }
     return stringsym_sort, stringsym_sort_dict
+
+
+def mk_adata_sort(
+    ss_sort: DatatypeSortRef,
+) -> DatatypeSortRef:
+    AData = Datatype("AttributeData")
+    AData.declare("int", ("get_int", IntSort()))
+    AData.declare("bool", ("get_bool", BoolSort()))
+    AData.declare("ss", ("get_ss", ss_sort))
+    return AData.create()
 
 
 def Iff(a, b):

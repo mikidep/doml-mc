@@ -60,7 +60,7 @@ infrastructure:
     InfrastructureElement:
         superclass: commons_DOMLElement
     ComputingNode:
-        superclass: infrastructure_InfrastructuralElement
+        superclass: infrastructure_InfrastructureElement
         attributes:
             architecture: 
                 type: String 
