@@ -85,18 +85,24 @@ def def_attribute_rel_and_assert_types(
     ad, ad_ = Consts("ad ad_", AData)
     # A type validity constraint is added for every attribute:
     for cname, c in mm.items():
+        src_subclass_cond = Or(  # Source subclass condition
+            *(
+                elem_class_f(es) == class_[scname]
+                for scname in subclasses_dict[cname]
+            )
+        )
         for mm_attr in c.attributes.values():
             # For all source elements and attribute data, their classes must be
             # a subtype of the source class, and the data must be of the data
             # type of the attribute.
             if mm_attr.type == "Boolean":
-                ad_assn = AData.is_bool(ad)  # type: ignore
+                tgt_type_cond = AData.is_bool(ad)  # type: ignore
             elif mm_attr.type == "Integer":
-                ad_assn = AData.is_int(ad)  # type: ignore
+                tgt_type_cond = AData.is_int(ad)  # type: ignore
             elif mm_attr.type == "String":
-                ad_assn = AData.is_ss(ad)  # type: ignore
+                tgt_type_cond = AData.is_ss(ad)  # type: ignore
             else:  # mm_attr.type == "GeneratorKind"
-                ad_assn = Or(
+                tgt_type_cond = Or(
                     ad == AData.ss(ss["IMAGE"]),  # type: ignore
                     ad == AData.ss(ss["SCRIPT"]),  # type: ignore
                 )
@@ -105,13 +111,8 @@ def def_attribute_rel_and_assert_types(
                 Implies(
                     attr_rel(es, attr[f"{cname}::{mm_attr.name}"], ad),
                     And(
-                        Or(
-                            *(
-                                elem_class_f(es) == class_[scname]
-                                for scname in subclasses_dict[cname]
-                            )
-                        ),
-                        ad_assn,
+                        src_subclass_cond,
+                        tgt_type_cond,
                     ),
                 ),
             )
@@ -124,9 +125,12 @@ def def_attribute_rel_and_assert_types(
             if lb == "1":
                 mult_lb_assn = ForAll(
                     [es],
-                    Exists(
-                        [ad],
-                        attr_rel(es, attr[f"{cname}::{mm_attr.name}"], ad),
+                    Implies(
+                        src_subclass_cond,
+                        Exists(
+                            [ad],
+                            attr_rel(es, attr[f"{cname}::{mm_attr.name}"], ad),
+                        ),
                     ),
                 )
                 solver.assert_and_track(
@@ -173,6 +177,12 @@ def def_association_rel_and_assert_types(
     es, et, et_ = Consts("es et et_", elem_sort)
     # A type validity constraint is added for every association:
     for cname, c in mm.items():
+        src_subclass_cond = Or(  # Source subclass condition
+            *(
+                elem_class_f(es) == class_[scname]
+                for scname in subclasses_dict[cname]
+            )
+        )
         for mm_assoc in c.associations.values():
             # For all source and target elements that are associated, their
             # classes must be a subtype of the source and target classes resp.
@@ -182,13 +192,8 @@ def def_association_rel_and_assert_types(
                 Implies(
                     assoc_rel(es, assoc[f"{cname}::{mm_assoc.name}"], et),
                     And(
-                        Or(
-                            *(
-                                elem_class_f(es) == class_[scname]
-                                for scname in subclasses_dict[cname]
-                            )
-                        ),
-                        Or(
+                        src_subclass_cond,
+                        Or(  # Target subclass condition
                             *(
                                 elem_class_f(et) == class_[scname]
                                 for scname in subclasses_dict[mm_assoc.type]
@@ -206,9 +211,14 @@ def def_association_rel_and_assert_types(
             if lb == "1":
                 mult_lb_assn = ForAll(
                     [es],
-                    Exists(
-                        [et],
-                        assoc_rel(es, assoc[f"{cname}::{mm_assoc.name}"], et),
+                    Implies(
+                        src_subclass_cond,
+                        Exists(
+                            [et],
+                            assoc_rel(
+                                es, assoc[f"{cname}::{mm_assoc.name}"], et
+                            ),
+                        ),
                     ),
                 )
                 solver.assert_and_track(

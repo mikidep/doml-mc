@@ -19,8 +19,10 @@ def infrastructure_to_im(infra: Infrastructure) -> IntermediateModel:
         node_elem = DOMLElement(
             name=infra_node.name,
             type=infra_node.typeId,
-            attributes={"commons_DOMLElement::name": infra_node.name},
-            associations={
+            attributes=infra_node.attributes
+            | {"commons_DOMLElement::name": infra_node.name},
+            associations=infra_node.associations
+            | {
                 "infrastructure_ComputingNode::ifaces": set(
                     infra_node.network_interfaces.keys()
                 )

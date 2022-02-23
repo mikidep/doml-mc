@@ -1,4 +1,14 @@
 from dataclasses import dataclass
+from typing import Union
+
+from doml_mc.intermediate_model.doml_element import (
+    parse_attrs_and_assocs_from_doc,
+)
+
+from ..intermediate_model.metamodel import MetaModel
+
+Attributes = dict[str, Union[str, int, bool]]
+Associations = dict[str, set[str]]
 
 
 @dataclass
@@ -13,6 +23,8 @@ class InfrastructureNode:
     name: str
     typeId: str
     network_interfaces: dict[str, "NetworkInterface"]
+    attributes: Attributes
+    associations: Associations
 
 
 @dataclass
@@ -35,7 +47,7 @@ class Group:
     typeId: str
 
 
-def parse_infrastructure(doc: dict) -> Infrastructure:
+def parse_infrastructure(doc: dict, mm: MetaModel) -> Infrastructure:
     def parse_infrastructure_node(doc: dict) -> InfrastructureNode:
         def parse_network_interface(doc: dict) -> NetworkInterface:
             return NetworkInterface(
@@ -44,13 +56,17 @@ def parse_infrastructure(doc: dict) -> Infrastructure:
                 endPoint=doc["endPoint"],
             )
 
+        typeId = doc["typeId"]
+        attrs, assocs = parse_attrs_and_assocs_from_doc(doc, typeId, mm)
         return InfrastructureNode(
             name=doc["name"],
-            typeId=doc["typeId"],
+            typeId=typeId,
             network_interfaces={
                 niface_doc["name"]: parse_network_interface(niface_doc)
                 for niface_doc in doc.get("interfaces", [])
             },
+            attributes=attrs,
+            associations=assocs,
         )
 
     def parse_network(doc: dict) -> Network:

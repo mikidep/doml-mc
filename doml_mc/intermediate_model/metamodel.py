@@ -10,6 +10,10 @@ class AttributeNotFound(Exception):
     pass
 
 
+class AssociationNotFound(Exception):
+    pass
+
+
 @dataclass
 class DOMLClass:
     name: str
@@ -111,6 +115,46 @@ def parse_metamodel(mmdoc: dict) -> MetaModel:
     )
 
 
+def _find_association_class(
+    mm: MetaModel,
+    cname: str,
+    aname: str,
+) -> DOMLClass:
+    c = mm[cname]
+    if aname in c.associations:
+        return c
+    elif c.superclass is None:
+        raise AssociationNotFound(
+            f"Association {aname} not found in subclasses of {cname}."
+        )
+    else:
+        return _find_association_class(mm, c.superclass, aname)
+
+
+def get_mangled_association_name(
+    mm: MetaModel,
+    cname: str,
+    aname: str,
+) -> str:
+    return f"{_find_association_class(mm, cname, aname).name}::{aname}"
+
+
+def get_mangled_attribute_defaults(
+    mm: MetaModel,
+    cname: str,
+) -> dict[str, Union[str, int, bool]]:
+    c = mm[cname]
+    defaults = {
+        f"{cname}::{aname}": a.default
+        for aname, a in c.attributes.items()
+        if a.default is not None
+    }
+    if c.superclass is None:
+        return defaults
+    else:
+        return get_mangled_attribute_defaults(mm, c.superclass) | defaults
+
+
 def _find_attribute_class(
     mm: MetaModel,
     cname: str,
@@ -133,19 +177,3 @@ def get_mangled_attribute_name(
     aname: str,
 ) -> str:
     return f"{_find_attribute_class(mm, cname, aname).name}::{aname}"
-
-
-def get_mangled_attribute_defaults(
-    mm: MetaModel,
-    cname: str,
-) -> dict[str, Union[str, int, bool]]:
-    c = mm[cname]
-    defaults = {
-        f"{cname}::{aname}": a.default
-        for aname, a in c.attributes.items()
-        if a.default is not None
-    }
-    if c.superclass is None:
-        return defaults
-    else:
-        return get_mangled_attribute_defaults(mm, c.superclass) | defaults

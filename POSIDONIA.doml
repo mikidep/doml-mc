@@ -152,12 +152,26 @@
                 ]
             },
             {
-                "typeId": "infrastructure_Container",
-                "name": "prodevelop/edi/procesos:latest"
+                "name": "prodevelop_edi_procesos_image",
+                "typeId": "infrastructure_ContainerImage",
+                "uri": "prodevelop/edi/procesos:latest"
             },
             {
+                "name": "prodevelop_edimer_procesos_image",
+                "typeId": "infrastructure_ContainerImage",
+                "uri": "prodevelop/edimer/procesos:latest"
+            },
+            {
+                "name": "prodevelop_edi_procesos_container",
                 "typeId": "infrastructure_Container",
-                "name": "prodevelop/edimer/procesos:latest"
+                "host": "Plataforma EDI",
+                "generatedFrom": "prodevelop_edi_procesos_image"
+            },
+            {
+                "name": "prodevelop_edimer_procesos_container",
+                "typeId": "infrastructure_Container",
+                "host": "EDIMER",
+                "generatedFrom": "prodevelop_edimer_procesos_image"
             }
         ],
         "networks": [

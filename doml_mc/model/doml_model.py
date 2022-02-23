@@ -1,5 +1,7 @@
 from dataclasses import dataclass
 
+from ..intermediate_model.metamodel import MetaModel
+
 from .application import Application, parse_application
 from .infrastructure import Infrastructure, parse_infrastructure
 from .optimization import Optimization, parse_optimization
@@ -18,14 +20,14 @@ class DOMLModel:
     concretizations: dict[str, Concretization]
 
 
-def parse_doml_model(doc: dict) -> DOMLModel:
+def parse_doml_model(doc: dict, mm: MetaModel) -> DOMLModel:
     return DOMLModel(
         name=doc["name"],
         modelname=doc["modelname"],
         id=doc["id"],
         version=doc["version"],
         application=parse_application(doc["application"]),
-        infrastructure=parse_infrastructure(doc["infrastructure"]),
+        infrastructure=parse_infrastructure(doc["infrastructure"], mm),
         optimization=parse_optimization(doc["optimization"]),
         concretizations={
             concdoc["name"]: parse_concretization(concdoc)

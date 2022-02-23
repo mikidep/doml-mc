@@ -9,7 +9,6 @@ from z3 import (
     ForAll,
     FuncDeclRef,
     Function,
-    Not,
     Or,
     Solver,
 )
@@ -18,7 +17,12 @@ from ..intermediate_model.types import IntermediateModel, MetaModel
 from ..intermediate_model.metamodel import get_mangled_attribute_defaults
 
 from .types import Refs, SortAndRefs
-from .utils import Iff, mk_enum_sort_dict, mk_stringsym_sort_from_strings
+from .utils import (
+    assert_relation_tuples,
+    Iff,
+    mk_enum_sort_dict,
+    mk_stringsym_sort_from_strings,
+)
 
 
 def mk_elem_sort_dict(
@@ -115,13 +119,14 @@ def assert_im_associations(
         for cname, c in mm.items()
         for aname in c.associations
     }
-    for esn, amn, etn in product(elem_names, assoc_mangled_names, elem_names):
-        # if association amn is not defined for element esn, the empty set is
-        # used to make the inclusion test fail
-        if etn in im[esn].associations.get(amn, set()):
-            solver.append(assoc_rel(elem[esn], assoc[amn], elem[etn]))
-        else:
-            solver.append(Not(assoc_rel(elem[esn], assoc[amn], elem[etn])))
+    rel_tpls = [
+        [esn, amn, etn]
+        for esn, amn, etn in product(
+            elem_names, assoc_mangled_names, elem_names
+        )
+        if etn in im[esn].associations.get(amn, set())
+    ]
+    assert_relation_tuples(assoc_rel, solver, rel_tpls, elem, assoc, elem)
 
 
 def mk_stringsym_sort_dict(

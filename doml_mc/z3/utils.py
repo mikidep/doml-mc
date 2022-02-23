@@ -113,7 +113,10 @@ def assert_function_tuples_raw(
         assert min(lengths) == max(lengths)
 
     for *xs, y in f_tpls:
-        solver.append(f(*xs) == y)
+        solver.assert_and_track(
+            f(*xs) == y,
+            f.name() + " " + " ".join(str(x) for x in xs) + f" {y}",
+        )
 
 
 def mk_stringsym_sort_from_strings(
