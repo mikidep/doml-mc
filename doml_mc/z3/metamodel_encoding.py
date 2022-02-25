@@ -1,6 +1,3 @@
-from typing import cast
-
-import networkx as nx
 from z3 import (
     And,
     BoolSort,
@@ -16,6 +13,7 @@ from z3 import (
     Solver,
 )
 from ..intermediate_model.types import MetaModel
+from ..intermediate_model.metamodel import get_subclasses_dict
 
 from .types import Refs, SortAndRefs
 from .utils import mk_enum_sort_dict
@@ -47,21 +45,6 @@ def mk_association_sort_dict(
         for aname in c.associations
     ]
     return mk_enum_sort_dict("Association", assocs)
-
-
-def get_subclasses_dict(mm: MetaModel) -> dict[str, set[str]]:
-    inherits_dg = nx.DiGraph(
-        [
-            (c.name, c.superclass)
-            for c in mm.values()
-            if c.superclass is not None
-        ]
-    )
-    inherits_dg.add_nodes_from(mm)
-    inherits_dg_trans = cast(
-        nx.DiGraph, nx.transitive_closure(inherits_dg, reflexive=True)
-    )
-    return {cname: set(inherits_dg_trans.predecessors(cname)) for cname in mm}
 
 
 def def_attribute_rel_and_assert_types(

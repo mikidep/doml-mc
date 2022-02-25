@@ -8,25 +8,31 @@ from ..model.infrastructure import (
 )
 from .._utils import merge_dicts
 
-from .types import IntermediateModel
+from .types import IntermediateModel, MetaModel
 from .doml_element import DOMLElement
+from .metamodel import get_subclasses_dict
 
 
-def infrastructure_to_im(infra: Infrastructure) -> IntermediateModel:
+def infrastructure_to_im(
+    infra: Infrastructure, mm: MetaModel
+) -> IntermediateModel:
+    subclasses_dict = get_subclasses_dict(mm)
+
     def _infra_node_to_im(
         infra_node: InfrastructureNode,
     ) -> IntermediateModel:
+        nifacereln = (
+            "infrastructure_Storage::ifaces"
+            if infra_node.typeId in subclasses_dict["infrastructure_Storage"]
+            else "infrastructure_ComputingNode::ifaces"
+        )
         node_elem = DOMLElement(
             name=infra_node.name,
             type=infra_node.typeId,
             attributes=infra_node.attributes
             | {"commons_DOMLElement::name": infra_node.name},
             associations=infra_node.associations
-            | {
-                "infrastructure_ComputingNode::ifaces": set(
-                    infra_node.network_interfaces.keys()
-                )
-            },
+            | {nifacereln: set(infra_node.network_interfaces.keys())},
         )
         niface_elems = {
             nifacen: DOMLElement(

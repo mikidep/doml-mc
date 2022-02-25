@@ -1,4 +1,5 @@
 from dataclasses import dataclass
+from typing import Optional
 
 from ..intermediate_model.metamodel import MetaModel
 
@@ -16,7 +17,7 @@ class DOMLModel:
     version: str
     application: Application
     infrastructure: Infrastructure
-    optimization: Optimization
+    optimization: Optional[Optimization]
     concretizations: dict[str, Concretization]
 
 
@@ -28,7 +29,9 @@ def parse_doml_model(doc: dict, mm: MetaModel) -> DOMLModel:
         version=doc["version"],
         application=parse_application(doc["application"]),
         infrastructure=parse_infrastructure(doc["infrastructure"], mm),
-        optimization=parse_optimization(doc["optimization"]),
+        optimization=parse_optimization(doc["optimization"])
+        if "optimization" in doc
+        else None,
         concretizations={
             concdoc["name"]: parse_concretization(concdoc)
             for concdoc in doc["concretizations"]

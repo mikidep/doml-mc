@@ -26,9 +26,9 @@ from .utils import (
 
 
 def mk_elem_sort_dict(
-    im: IntermediateModel,
+    im: IntermediateModel, additional_elems: list[str] = []
 ) -> SortAndRefs:
-    return mk_enum_sort_dict("Element", list(im))
+    return mk_enum_sort_dict("Element", list(im) + additional_elems)
 
 
 def def_elem_class_f_and_assert_classes(

@@ -90,5 +90,7 @@ def parse_infrastructure(doc: dict, mm: MetaModel) -> Infrastructure:
         networks={
             ndoc["name"]: parse_network(ndoc) for ndoc in doc["networks"]
         },
-        groups={gdoc["name"]: parse_group(gdoc) for gdoc in doc["groups"]},
+        groups={
+            gdoc["name"]: parse_group(gdoc) for gdoc in doc.get("groups", [])
+        },
     )

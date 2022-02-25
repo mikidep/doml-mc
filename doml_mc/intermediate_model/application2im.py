@@ -14,12 +14,12 @@ def application_to_im(app: Application) -> IntermediateModel:
             type=app_comp.typeId,
             attributes={"commons_DOMLElement::name": app_comp.name},
             associations={
-                "application_SoftwareComponent::consumedInterfaces": {
+                "application_SoftwarePackage::consumedInterfaces": {
                     f"{cn}_{ifacen}"
                     for cn, ifacens in app_comp.consumedInterfaces.items()
                     for ifacen in ifacens
                 },
-                "application_SoftwareComponent::exposedInterfaces": {
+                "application_SoftwarePackage::exposedInterfaces": {
                     f"{app_comp.name}_{ifacen}"
                     for ifacen in app_comp.exposedInterfaces
                 },

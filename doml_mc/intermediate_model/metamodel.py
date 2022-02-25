@@ -1,5 +1,7 @@
 from dataclasses import dataclass
-from typing import Literal, Optional, Union
+from typing import cast, Literal, Optional, Union
+
+import networkx as nx
 
 from .._utils import merge_dicts
 
@@ -177,3 +179,18 @@ def get_mangled_attribute_name(
     aname: str,
 ) -> str:
     return f"{_find_attribute_class(mm, cname, aname).name}::{aname}"
+
+
+def get_subclasses_dict(mm: MetaModel) -> dict[str, set[str]]:
+    inherits_dg = nx.DiGraph(
+        [
+            (c.name, c.superclass)
+            for c in mm.values()
+            if c.superclass is not None
+        ]
+    )
+    inherits_dg.add_nodes_from(mm)
+    inherits_dg_trans = cast(
+        nx.DiGraph, nx.transitive_closure(inherits_dg, reflexive=True)
+    )
+    return {cname: set(inherits_dg_trans.predecessors(cname)) for cname in mm}
