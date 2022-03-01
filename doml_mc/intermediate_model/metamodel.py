@@ -105,7 +105,12 @@ def parse_metamodel(mmdoc: dict) -> MetaModel:
             },
         )
 
-    assert set(mmdoc.keys()) <= {"commons", "application", "infrastructure"}
+    assert set(mmdoc.keys()) <= {
+        "commons",
+        "application",
+        "infrastructure",
+        "concrete",
+    }
 
     return merge_dicts(
         {

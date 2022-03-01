@@ -14,20 +14,18 @@ class Concretization:
 @dataclass
 class Group:
     name: str
-    typeId: str
+    maps: str
 
 
 @dataclass
 class VirtualMachine:
     name: str
     maps: str
-    description: str
 
 
 @dataclass
 class Provider:
     name: str
-    typeId: str
     supportedGroups: list[str]
     providedVMs: list[str]
     storages: list[str]
@@ -38,14 +36,12 @@ class Provider:
 @dataclass
 class Storage:
     name: str
-    typeId: str
     maps: str
 
 
 @dataclass
 class Network:
     name: str
-    typeId: str
     maps: str
 
 
@@ -53,44 +49,42 @@ def parse_concretization(doc: dict) -> Concretization:
     def parse_group(doc: dict) -> Group:
         return Group(
             name=doc["name"],
-            typeId=doc["typeId"],
+            maps=doc["maps"],
         )
 
     def parse_virtual_machine(doc: dict) -> VirtualMachine:
         return VirtualMachine(
             name=doc["name"],
             maps=doc["maps"],
-            description=doc["description"],
         )
 
     def parse_provider(doc: dict) -> Provider:
         return Provider(
             name=doc["name"],
-            typeId=doc["typeId"],
-            supportedGroups=doc["supportedGroups"],
+            supportedGroups=doc.get("supportedGroups", []),
             providedVMs=doc["providedVMs"],
-            storages=doc["storages"],
+            storages=doc.get("storages", []),
             providedNetworks=doc["providedNetworks"],
-            description=doc["description"],
+            description=doc.get("description", ""),
         )
 
     def parse_storage(doc: dict) -> Storage:
         return Storage(
             name=doc["name"],
-            typeId=doc["typeId"],
             maps=doc["maps"],
         )
 
     def parse_network(doc: dict) -> Network:
         return Network(
             name=doc["name"],
-            typeId=doc["typeId"],
             maps=doc["maps"],
         )
 
     return Concretization(
         name=doc["name"],
-        groups={gdoc["name"]: parse_group(gdoc) for gdoc in doc["groups"]},
+        groups={
+            gdoc["name"]: parse_group(gdoc) for gdoc in doc.get("asGroups", [])
+        },
         vms={
             vmdooc["name"]: parse_virtual_machine(vmdooc)
             for vmdooc in doc["vms"]
@@ -99,7 +93,8 @@ def parse_concretization(doc: dict) -> Concretization:
             pdoc["name"]: parse_provider(pdoc) for pdoc in doc["providers"]
         },
         storages={
-            sdoc["name"]: parse_storage(sdoc) for sdoc in doc["storages"]
+            sdoc["name"]: parse_storage(sdoc)
+            for sdoc in doc.get("storages", [])
         },
         networks={
             ndoc["name"]: parse_network(ndoc) for ndoc in doc["networks"]

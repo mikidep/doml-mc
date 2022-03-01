@@ -115,7 +115,7 @@ def assert_function_tuples_raw(
     for *xs, y in f_tpls:
         solver.assert_and_track(
             f(*xs) == y,
-            f.name() + " " + " ".join(str(x) for x in xs) + f" {y}",
+            f"{f.name()} " + " ".join(str(x) for x in xs) + f" {y}",
         )
 
 

@@ -79,12 +79,6 @@
         {
             "name": "conc_infra_1",
             "typeId": "concrete_ConcreteInfrastructure",
-            "groups": [
-                {
-                    "typeId": "concrete_ComputingGroup",
-                    "name": "VPC"
-                }
-            ],
             "vms": [
                 {
                     "typeId": "concrete_VirtualMachine",
@@ -118,9 +112,6 @@
                     "typeId": "concrete_RuntimeProvider",
                     "name": "AWS",
                     "description": "The Selected Runtime Provider",
-                    "supportedGroups": [
-                        "VPC"
-                    ],
                     "providedVMs": [
                         "conc_wpvm",
                         "conc_dbvm"

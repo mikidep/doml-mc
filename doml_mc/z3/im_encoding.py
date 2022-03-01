@@ -78,11 +78,10 @@ def assert_im_attributes(
 
     a = Const("a", attr_sort)
     d = Const("d", AData)
-    for esn in im:
-        cname = im[esn].type
-        mangled_attrs = get_mangled_attribute_defaults(mm, cname) | {
-            aname: avalue for aname, avalue in im[esn].attributes.items()
-        }
+    for esn, im_es in im.items():
+        mangled_attrs = (
+            get_mangled_attribute_defaults(mm, im_es.type) | im_es.attributes
+        )
         assn = ForAll(
             [a, d],
             Iff(
@@ -127,6 +126,42 @@ def assert_im_associations(
         if etn in im[esn].associations.get(amn, set())
     ]
     assert_relation_tuples(assoc_rel, solver, rel_tpls, elem, assoc, elem)
+
+
+def assert_im_associations_q(
+    assoc_rel: FuncDeclRef,
+    solver: Solver,
+    im: IntermediateModel,
+    elem_sort: DatatypeSortRef,
+    elem: Refs,
+    assoc_sort: DatatypeSortRef,
+    assoc: Refs,
+) -> None:
+    """
+    ### Effects
+    This procedure is effectful on `solver`.
+    """
+
+    a = Const("a", assoc_sort)
+    et = Const("et", elem_sort)
+    for esn, im_es in im.items():
+        assn = ForAll(
+            [a, et],
+            Iff(
+                assoc_rel(elem[esn], a, et),
+                Or(
+                    *(
+                        And(
+                            a == assoc[amn],
+                            et == elem[etn],
+                        )
+                        for amn, etns in im_es.associations.items()
+                        for etn in etns
+                    )
+                ),
+            ),
+        )
+        solver.assert_and_track(assn, f"associated_elems {esn}")
 
 
 def mk_stringsym_sort_dict(

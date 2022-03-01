@@ -23,6 +23,12 @@ commons:
                 multiplicity: "1"
 
 application:
+    ApplicationLayer:
+        superclass: commons_DOMLElement
+        associations:
+            components:
+                type: application_ApplicationComponent
+                multiplicity: "0..*"
     ApplicationComponent:
         superclass: commons_DOMLElement
     SoftwarePackage:
@@ -57,6 +63,30 @@ application:
         superclass: application_SaaS
 
 infrastructure:
+    InfrastructureLayer:
+        superclass: commons_DOMLElement
+        associations:
+            nodes:
+                type: infrastructure_ComputingNode
+                multiplicity: "0..*"
+            generators:
+                type: infrastructure_ComputingNodeGenerator
+                multiplicity: "0..*"
+            asGroups:
+                type: infrastructure_AutoScalingGroup
+                multiplicity: "0..*"
+            networks:
+                type: infrastructure_Network
+                multiplicity: "0..*"
+            firewalls:
+                type: infrastructure_Firewall
+                multiplicity: "0..*"
+            storages:
+                type: infrastructure_Storage
+                multiplicity: "0..*"
+            faas:
+                type: infrastructure_FunctionAsAService
+                multiplicity: "0..*"
     InfrastructureElement:
         superclass: commons_DOMLElement
     ComputingNode:
@@ -162,7 +192,17 @@ infrastructure:
         associations:
             ifaces:
                 type: infrastructure_NetworkInterface
-                multiplicity: "0..*"
+                multiplicity: "0..1"
+    FunctionAsAService:
+        superclass: infrastructure_InfrastructureElement
+        attributes:
+            cost:
+                type: Integer  # in cents
+                multiplicity: "0..1"
+        associations:
+            ifaces:
+                type: infrastructure_NetworkInterface
+                multiplicity: "0..1"
     Network:
         superclass: commons_DOMLElement
         attributes:
@@ -203,3 +243,80 @@ infrastructure:
             ifaces:
                 type: infrastructure_NetworkInterface
                 multiplicity: "0..*"
+
+concrete:
+    ConcreteInfrastructure:
+        superclass: commons_DOMLElement
+        associations:
+            providers:
+                type: concrete_RuntimeProvider
+                multiplicity: "0..*"
+            nodes:
+                type: concrete_VirtualMachine
+                multiplicity: "0..*"
+            asGroups:
+                type: concrete_AutoScalingGroup
+                multiplicity: "0..*"
+            networks:
+                type: concrete_Network
+                multiplicity: "0..*"
+            storages:
+                type: concrete_Storage
+                multiplicity: "0..*"
+            faas:
+                type: concrete_FunctionAsAService
+                multiplicity: "0..*"
+    ConcreteElement:
+        superclass: commons_DOMLElement
+        attributes:
+            configurationScript:
+                type: String
+                multiplicity: "0..1"
+    RuntimeProvider:
+        superclass: commons_DOMLElement
+        associations:
+            supportedGroups:
+                type: concrete_AutoScalingGroup
+                multiplicity: "0..*"
+            vms:
+                type: concrete_VirtualMachine
+                multiplicity: "0..*"
+            networks:
+                type: concrete_Network
+                multiplicity: "0..*"
+            storages:
+                type: concrete_Storage
+                multiplicity: "0..*"
+            faas:
+                type: concrete_FunctionAsAService
+                multiplicity: "0..*"
+    VirtualMachine:
+        superclass: concrete_ConcreteElement
+        associations:
+            maps:
+                type: infrastructure_VirtualMachine
+                multiplicity: "1"
+    Network:
+        superclass: concrete_ConcreteElement
+        associations:
+            maps:
+                type: infrastructure_Network
+                multiplicity: "1"
+    Storage:
+        superclass: concrete_ConcreteElement
+        associations:
+            maps:
+                type: infrastructure_Storage
+                multiplicity: "1"
+    FunctionAsAService:
+        superclass: concrete_ConcreteElement
+        associations:
+            maps:
+                type: infrastructure_FunctionAsAService
+                multiplicity: "1"
+    AutoScalingGroup:
+        superclass: concrete_ConcreteElement
+        associations:
+            maps:
+                type: infrastructure_AutoScalingGroup
+                multiplicity: "1"

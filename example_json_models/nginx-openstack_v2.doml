@@ -1,0 +1,96 @@
+{
+    "typeId": "commons_DOMLModel",
+    "name": "nginx_openstack",
+    "modelname": "nginx-openstack v2",
+    "version": "2",
+    "id": "nginx_openstack",
+    "application": {
+        "name": "app",
+        "typeId": "application_ApplicationLayer",
+        "children": [
+            {
+                "typeId": "application_SoftwarePackage",
+                "name": "nginx"
+            }
+        ]
+    },
+    "infrastructure": {
+        "typeId": "infrastructure_InfrastructureLayer",
+        "nodes": [
+            {
+                "name": "v_img",
+                "typeId": "infrastructure_VMImage"
+            },
+            {
+                "typeId": "infrastructure_VirtualMachine",
+                "name": "vm1",
+                "generatedFrom": "v_img",
+                "group": "ag",
+                "interfaces": [
+                    {
+                        "name": "i1",
+                        "belongsTo": "net1",
+                        "endPoint": "16.0.0.1"
+                    }
+                ]
+            }
+        ],
+        "networks": [
+            {
+                "typeId": "infrastructure_Network",
+                "name": "net1",
+                "protocol": "TCP/IP",
+                "addressRange": "16.0.0.0/24"
+            }
+        ],
+        "groups": [
+            {
+                "typeId": "infrastructure_AutoScalingGroup",
+                "name": "ag"
+            }
+        ]
+    },
+    "concretizations": [
+        {
+            "name": "con_infra",
+            "typeId": "concrete_ConcreteInfrastructure",
+            "vms": [
+                {
+                    "typeId": "concrete_VirtualMachine",
+                    "name": "concrete_vm",
+                    "description": "small",
+                    "maps": "vm1"
+                }
+            ],
+            "networks": [
+                {
+                    "typeId": "concrete_Network",
+                    "name": "concrete_net",
+                    "maps": "net1"
+                }
+            ],
+            "asGroups": [
+                {
+                    "typeId": "concrete_AutoScalingGroup",
+                    "name": "concrete_ag",
+                    "maps": "ag"
+                }
+            ],
+            "providers": [
+                {
+                    "typeId": "concrete_RuntimeProvider",
+                    "name": "openstack",
+                    "providedVMs": [
+                        "concrete_vm"
+                    ],
+                    "providedNetworks": [
+                        "concrete_net"
+                    ],
+                    "supportedGroups": [
+                        "concrete_ag"
+                    ]
+                }
+            ]
+        }
+    ]
+}

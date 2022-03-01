@@ -172,6 +172,17 @@
                 "typeId": "infrastructure_Container",
                 "host": "EDIMER",
                 "generatedFrom": "prodevelop_edimer_procesos_image"
+            },
+            {
+                "name": "STORAGE_1",
+                "typeId": "infrastructure_Storage",
+                "interfaces": [
+                    {
+                        "name": "network_iface7",
+                        "belongsTo": "Subnet1",
+                        "endPoint": "10.100.1.7"
+                    }
+                ]
             }
         ],
         "networks": [
@@ -216,28 +227,28 @@
         {
             "name": "CONCRETIZATION_1",
             "typeId": "concrete_ConcreteInfrastructure",
-            "groups": [
+            "asGroups": [
                 {
-                    "typeId": "concrete_ComputingGroup",
-                    "name": "VPC"
+                    "name": "VPC",
+                    "maps": "EdiASG"
                 }
             ],
             "vms": [
                 {
                     "typeId": "concrete_VirtualMachine",
                     "maps": "DATABASE",
-                    "name": "ORACLE DB",
+                    "name": "AWS_ORACLE_DB",
                     "description": "AWS::RDS::DBInstance"
                 },
                 {
                     "typeId": "concrete_VirtualMachine",
-                    "name": "PlataformaEDI",
+                    "name": "AWS_PlataformaEDI",
                     "description": "t3a.large",
                     "maps": "Plataforma EDI"
                 },
                 {
                     "typeId": "concrete_VirtualMachine",
-                    "name": "EDIMER",
+                    "name": "AWS_EDIMER",
                     "description": "m5a.large",
                     "maps": "EDIMER"
                 }
@@ -250,11 +261,10 @@
                         "VPC"
                     ],
                     "providedVMs": [
-                        "ORACLE DB"
+                        "AWS_ORACLE_DB"
                     ],
                     "storages": [
-                        "STORAGE 1",
-                        "STORAGE 2"
+                        "STORAGE 1"
                     ],
                     "providedNetworks": [
                         "NETWORK 1",
@@ -266,14 +276,9 @@
             ],
             "storages": [
                 {
+                    "name": "STORAGE 1",
                     "typeId": "concrete_Storage",
-                    "maps": "STORAGE_1",
-                    "name": "STORAGE 1"
-                },
-                {
-                    "typeId": "concrete_Storage",
-                    "maps": "STORAGE_2",
-                    "name": "STORAGE 2"
+                    "maps": "STORAGE_1"
                 }
             ],
             "networks": [
