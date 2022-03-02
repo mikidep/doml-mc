@@ -16,7 +16,7 @@ from ..intermediate_model.types import MetaModel
 from ..intermediate_model.metamodel import get_subclasses_dict
 
 from .types import Refs, SortAndRefs
-from .utils import mk_enum_sort_dict
+from .utils import Iff, mk_enum_sort_dict
 
 
 def mk_class_sort_dict(
@@ -148,6 +148,7 @@ def def_association_rel_and_assert_types(
     class_: Refs,
     elem_class_f: FuncDeclRef,
     elem_sort: DatatypeSortRef,
+    inv_assoc: list[tuple[str, str]],
 ) -> FuncDeclRef:
     """
     ### Effects
@@ -227,4 +228,13 @@ def def_association_rel_and_assert_types(
                     mult_ub_assn,
                     f"association_mult_ub {cname}::{mm_assoc.name}",
                 )
+
+    # Inverse association assertions
+    for an1, an2 in inv_assoc:
+        inv_assn = ForAll(
+            [es, et],
+            Iff(assoc_rel(es, assoc[an1], et), assoc_rel(et, assoc[an2], es)),
+        )
+        solver.assert_and_track(inv_assn, f"association_inverse {an1} {an2}")
+
     return assoc_rel

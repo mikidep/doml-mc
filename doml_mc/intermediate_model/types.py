@@ -1,4 +1,4 @@
 from .metamodel import MetaModel  # noqa: F401
-from .doml_element import DOMLElement
+from . import doml_element as de  # noqa: F401
 
-IntermediateModel = dict[str, DOMLElement]
+IntermediateModel = dict[str, "de.DOMLElement"]

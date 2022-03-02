@@ -1,0 +1,117 @@
+{
+    "typeId": "commons_DOMLModel",
+    "name": "doml_json_example",
+    "modelname": "DOML JSON Example",
+    "version": "0.1",
+    "id": "doml_json_example",
+    "application": {
+        "name": "app_layer",
+        "typeId": "application_ApplicationLayer",
+        "children": [
+            {
+                "typeId": "application_SoftwarePackage",
+                "name": "wordpress",
+                "consumedInterfaces->postgres": [
+                    "db_interface"
+                ],
+                "exposedInterfaces": []
+            },
+            {
+                "typeId": "application_DBMS",
+                "name": "postgres",
+                "exposedInterfaces": [
+                    {
+                        "typeId": "application_SoftwareInterface",
+                        "name": "db_interface",
+                        "endPoint": "5432"
+                    }
+                ]
+            }
+        ]
+    },
+    "infrastructure": {
+        "typeId": "infrastructure_InfrastructureLayer",
+        "nodes": [
+            {
+                "typeId": "infrastructure_VirtualMachine",
+                "name": "wpvm",
+                "interfaces": []
+            },
+            {
+                "typeId": "infrastructure_VirtualMachine",
+                "name": "dbvm",
+                "interfaces": []
+            },
+            {
+                "typeId": "infrastructure_Storage",
+                "name": "stor1",
+                "interfaces": [
+                    {
+                        "name": "stor1_niface",
+                        "belongsTo": "net1",
+                        "endPoint": "10.100.1.3"
+                    }
+                ]
+            }
+        ],
+        "networks": [
+            {
+                "typeId": "infrastructure_Network",
+                "name": "net1",
+                "protocol": "TCP/IP",
+                "addressRange": "10.100.1.0/24"
+            }
+        ]
+    },
+    "concretizations": [
+        {
+            "name": "conc_infra_1",
+            "typeId": "concrete_ConcreteInfrastructure",
+            "vms": [
+                {
+                    "typeId": "concrete_VirtualMachine",
+                    "name": "conc_wpvm",
+                    "description": "t3a.large",
+                    "maps": "wpvm"
+                },
+                {
+                    "typeId": "concrete_VirtualMachine",
+                    "name": "conc_dbvm",
+                    "description": "m5a.large",
+                    "maps": "dbvm"
+                }
+            ],
+            "storages": [
+                {
+                    "typeId": "concrete_Storage",
+                    "name": "conc_stor1",
+                    "maps": "stor1"
+                }
+            ],
+            "networks": [
+                {
+                    "typeId": "concrete_Network",
+                    "name": "conc_net1",
+                    "maps": "net1"
+                }
+            ],
+            "providers": [
+                {
+                    "typeId": "concrete_RuntimeProvider",
+                    "name": "AWS",
+                    "description": "The Selected Runtime Provider",
+                    "providedVMs": [
+                        "conc_wpvm",
+                        "conc_dbvm"
+                    ],
+                    "storages": [
+                        "conc_stor1"
+                    ],
+                    "providedNetworks": [
+                        "conc_net1"
+                    ]
+                }
+            ]
+        }
+    ]
+}

@@ -122,6 +122,17 @@ def parse_metamodel(mmdoc: dict) -> MetaModel:
     )
 
 
+def parse_inverse_associations(doc: dict) -> list[tuple[str, str]]:
+    return [
+        (inv_of, f"{layer}_{cname}::{aname}")
+        for layer, ldoc in doc.items()
+        for cname, cdoc in ldoc.items()
+        for aname, adoc in cdoc.get("associations", {}).items()
+        for inv_of in [adoc.get("inverse_of")]
+        if inv_of is not None
+    ]
+
+
 def _find_association_class(
     mm: MetaModel,
     cname: str,

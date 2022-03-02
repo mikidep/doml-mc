@@ -1,6 +1,8 @@
 from typing import Union
 from dataclasses import dataclass
 
+from doml_mc.intermediate_model.types import IntermediateModel
+
 from .metamodel import (
     AssociationNotFound,
     AttributeNotFound,
@@ -44,3 +46,23 @@ def parse_attrs_and_assocs_from_doc(
             except AssociationNotFound:
                 pass
     return attrs, assocs
+
+
+def reciprocate_inverse_associations(
+    im: IntermediateModel,
+    invs: list[tuple[str, str]],
+) -> None:
+    """
+    ### Effects
+    This procedure is effectful on `im`.
+    """
+    # A dict for inverse lookup where inverse relationships are mapped both
+    # ways.
+    inv_dict = dict(invs) | {an2: an1 for an1, an2 in invs}
+    for ename, elem in im.items():
+        for aname, atgts in elem.associations.items():
+            if aname in inv_dict:
+                for atgt in atgts:
+                    im[atgt].associations[inv_dict[aname]] = im[
+                        atgt
+                    ].associations.get(inv_dict[aname], set()) | {ename}

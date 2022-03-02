@@ -132,7 +132,6 @@ def assert_im_associations_q(
     assoc_rel: FuncDeclRef,
     solver: Solver,
     im: IntermediateModel,
-    elem_sort: DatatypeSortRef,
     elem: Refs,
     assoc_sort: DatatypeSortRef,
     assoc: Refs,
@@ -143,25 +142,21 @@ def assert_im_associations_q(
     """
 
     a = Const("a", assoc_sort)
-    et = Const("et", elem_sort)
-    for esn, im_es in im.items():
+    for (esn, im_es), etn in product(im.items(), im):
         assn = ForAll(
-            [a, et],
+            [a],
             Iff(
-                assoc_rel(elem[esn], a, et),
+                assoc_rel(elem[esn], a, elem[etn]),
                 Or(
                     *(
-                        And(
-                            a == assoc[amn],
-                            et == elem[etn],
-                        )
+                        a == assoc[amn]
                         for amn, etns in im_es.associations.items()
-                        for etn in etns
+                        if etn in etns
                     )
                 ),
             ),
         )
-        solver.assert_and_track(assn, f"associated_elems {esn}")
+        solver.assert_and_track(assn, f"associations {esn} {etn}")
 
 
 def mk_stringsym_sort_dict(
