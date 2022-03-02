@@ -17,7 +17,7 @@ def concretization_to_im(conc: Concretization) -> IntermediateModel:
         return {
             g.name: DOMLElement(
                 name=g.name,
-                type="concrete_AutoScalingGroup",
+                class_="concrete_AutoScalingGroup",
                 attributes={"commons_DOMLElement::name": g.name},
                 associations={"concrete_AutoScalingGroup::maps": {g.maps}},
             )
@@ -27,7 +27,7 @@ def concretization_to_im(conc: Concretization) -> IntermediateModel:
         return {
             vm.name: DOMLElement(
                 name=vm.name,
-                type="concrete_VirtualMachine",
+                class_="concrete_VirtualMachine",
                 attributes={"commons_DOMLElement::name": vm.name},
                 associations={"concrete_VirtualMachine::maps": {vm.maps}},
             )
@@ -37,7 +37,7 @@ def concretization_to_im(conc: Concretization) -> IntermediateModel:
         return {
             s.name: DOMLElement(
                 name=s.name,
-                type="concrete_Storage",
+                class_="concrete_Storage",
                 attributes={"commons_DOMLElement::name": s.name},
                 associations={"concrete_Storage::maps": {s.maps}},
             )
@@ -47,7 +47,7 @@ def concretization_to_im(conc: Concretization) -> IntermediateModel:
         return {
             n.name: DOMLElement(
                 name=n.name,
-                type="concrete_Network",
+                class_="concrete_Network",
                 attributes={"commons_DOMLElement::name": n.name},
                 associations={"concrete_Network::maps": {n.maps}},
             )
@@ -57,7 +57,7 @@ def concretization_to_im(conc: Concretization) -> IntermediateModel:
         return {
             p.name: DOMLElement(
                 name=p.name,
-                type="concrete_RuntimeProvider",
+                class_="concrete_RuntimeProvider",
                 attributes={"commons_DOMLElement::name": p.name},
                 associations={
                     "concrete_RuntimeProvider::supportedGroups": set(
@@ -84,7 +84,7 @@ def concretization_to_im(conc: Concretization) -> IntermediateModel:
         {
             conc.name: DOMLElement(
                 name=conc.name,
-                type="concrete_ConcreteInfrastructure",
+                class_="concrete_ConcreteInfrastructure",
                 attributes={"commons_DOMLElement::name": conc.name},
                 associations={
                     "concrete_ConcreteInfrastructure::providers": set(

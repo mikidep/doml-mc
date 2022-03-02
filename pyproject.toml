@@ -15,6 +15,7 @@ pytest = "^5.2"
 flake8 = "^4.0.1"
 black = "^21.12b0"
 ipykernel = "^6.6.1"
+prettyprinter = "^0.18.0"
 
 [build-system]
 requires = ["poetry-core>=1.0.0"]

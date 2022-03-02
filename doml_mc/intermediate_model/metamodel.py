@@ -35,7 +35,7 @@ class DOMLAttribute:
 @dataclass
 class DOMLAssociation:
     name: str
-    type: str
+    class_: str
     multiplicity: Multiplicity
 
 
@@ -89,7 +89,9 @@ def parse_metamodel(mmdoc: dict) -> MetaModel:
                 or mults == "1..*"
             )
             return DOMLAssociation(
-                name=aname, type=adoc["type"], multiplicity=parse_mult(mults)
+                name=aname,
+                class_=adoc["class"],
+                multiplicity=parse_mult(mults),
             )
 
         return DOMLClass(

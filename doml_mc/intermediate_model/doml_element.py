@@ -18,7 +18,7 @@ Associations = dict[str, set[str]]
 @dataclass
 class DOMLElement:
     name: str
-    type: str
+    class_: str
     # the keys of the `attributes`/`associations` dicts are
     # attribute/association names mangled with the type that declares them,
     # e.g., `"application_SoftwarePackage::isPersistent"`.

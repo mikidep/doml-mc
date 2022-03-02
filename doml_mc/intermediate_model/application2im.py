@@ -11,7 +11,7 @@ def application_to_im(app: Application) -> IntermediateModel:
     ) -> IntermediateModel:
         comp_elem = DOMLElement(
             name=app_comp.name,
-            type=app_comp.typeId,
+            class_=app_comp.typeId,
             attributes={"commons_DOMLElement::name": app_comp.name},
             associations={
                 "application_SoftwarePackage::consumedInterfaces": {
@@ -29,7 +29,7 @@ def application_to_im(app: Application) -> IntermediateModel:
         iface_elems = {
             elem_n: DOMLElement(
                 name=elem_n,
-                type="application_SoftwareInterface",
+                class_="application_SoftwareInterface",
                 attributes={
                     "commons_DOMLElement::name": elem_n,
                     "application_SoftwareInterface::endPoint": iface.endPoint,

@@ -31,7 +31,7 @@ def infrastructure_to_im(
         )
         node_elem = DOMLElement(
             name=infra_node.name,
-            type=infra_node.typeId,
+            class_=infra_node.typeId,
             attributes=infra_node.attributes
             | {"commons_DOMLElement::name": infra_node.name},
             associations=infra_node.associations
@@ -40,7 +40,7 @@ def infrastructure_to_im(
         niface_elems = {
             nifacen: DOMLElement(
                 name=nifacen,
-                type="infrastructure_NetworkInterface",
+                class_="infrastructure_NetworkInterface",
                 attributes={
                     "commons_DOMLElement::name": nifacen,
                     "infrastructure_NetworkInterface::endPoint": int(
@@ -61,7 +61,7 @@ def infrastructure_to_im(
         return {
             net.name: DOMLElement(
                 name=net.name,
-                type="infrastructure_Network",
+                class_="infrastructure_Network",
                 attributes={
                     "commons_DOMLElement::name": net.name,
                     "infrastructure_Network::address_lb": int(
@@ -79,7 +79,7 @@ def infrastructure_to_im(
         return {
             group.name: DOMLElement(
                 name=group.name,
-                type=group.typeId,
+                class_=group.typeId,
                 attributes={"commons_DOMLElement::name": group.name},
                 associations={},
             )

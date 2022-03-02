@@ -47,7 +47,7 @@ def mk_association_sort_dict(
     return mk_enum_sort_dict("Association", assocs)
 
 
-def def_attribute_rel_and_assert_types(
+def def_attribute_rel_and_assert_constraints(
     mm: MetaModel,
     solver: Solver,
     attr_sort: DatatypeSortRef,
@@ -140,7 +140,7 @@ def def_attribute_rel_and_assert_types(
     return attr_rel
 
 
-def def_association_rel_and_assert_types(
+def def_association_rel_and_assert_constraints(
     mm: MetaModel,
     solver: Solver,
     assoc_sort: DatatypeSortRef,
@@ -171,7 +171,7 @@ def def_association_rel_and_assert_types(
             # For all source and target elements that are associated, their
             # classes must be a subtype of the source and target classes resp.
             # of the association.
-            type_assn = ForAll(
+            class_assn = ForAll(
                 [es, et],
                 Implies(
                     assoc_rel(es, assoc[f"{cname}::{mm_assoc.name}"], et),
@@ -180,14 +180,14 @@ def def_association_rel_and_assert_types(
                         Or(  # Target subclass condition
                             *(
                                 elem_class_f(et) == class_[scname]
-                                for scname in subclasses_dict[mm_assoc.type]
+                                for scname in subclasses_dict[mm_assoc.class_]
                             )
                         ),
                     ),
                 ),
             )
             solver.assert_and_track(
-                type_assn, f"association_st_types {cname}::{mm_assoc.name}"
+                class_assn, f"association_st_classes {cname}::{mm_assoc.name}"
             )
 
             # Multiplicity constraints

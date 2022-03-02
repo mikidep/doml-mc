@@ -46,8 +46,8 @@ def def_elem_class_f_and_assert_classes(
     elem_class_f = Function("elem_class", elem_sort, class_sort)
     for ename, e in im.items():
         solver.assert_and_track(
-            elem_class_f(elem[ename]) == class_[e.type],
-            f"elem_class {ename} {e.type}",
+            elem_class_f(elem[ename]) == class_[e.class_],
+            f"elem_class {ename} {e.class_}",
         )
     return elem_class_f
 
@@ -80,7 +80,7 @@ def assert_im_attributes(
     d = Const("d", AData)
     for esn, im_es in im.items():
         mangled_attrs = (
-            get_mangled_attribute_defaults(mm, im_es.type) | im_es.attributes
+            get_mangled_attribute_defaults(mm, im_es.class_) | im_es.attributes
         )
         assn = ForAll(
             [a, d],
