@@ -212,3 +212,18 @@ def get_subclasses_dict(mm: MetaModel) -> dict[str, set[str]]:
         nx.DiGraph, nx.transitive_closure(inherits_dg, reflexive=True)
     )
     return {cname: set(inherits_dg_trans.predecessors(cname)) for cname in mm}
+
+
+def get_superclasses_dict(mm: MetaModel) -> dict[str, set[str]]:
+    inherits_dg = nx.DiGraph(
+        [
+            (c.name, c.superclass)
+            for c in mm.values()
+            if c.superclass is not None
+        ]
+    )
+    inherits_dg.add_nodes_from(mm)
+    inherits_dg_trans = cast(
+        nx.DiGraph, nx.transitive_closure(inherits_dg, reflexive=True)
+    )
+    return {cname: set(inherits_dg_trans.successors(cname)) for cname in mm}
