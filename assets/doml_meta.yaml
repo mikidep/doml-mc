@@ -242,7 +242,7 @@ infrastructure:
                 class: infrastructure_Network
                 multiplicity: "1"
     Firewall:
-        superclass: infrastructure_DOMLElement
+        superclass: commons_DOMLElement
         associations:
             ifaces:
                 class: infrastructure_NetworkInterface

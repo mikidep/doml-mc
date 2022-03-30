@@ -23,7 +23,9 @@ def application_to_im(app: Application) -> IntermediateModel:
                     f"{app_comp.name}_{ifacen}"
                     for ifacen in app_comp.exposedInterfaces
                 },
-            },
+            }
+            if app_comp.typeId == "application_SoftwarePackage"
+            else {},
         )
 
         iface_elems = {

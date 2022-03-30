@@ -35,7 +35,11 @@ def infrastructure_to_im(
             attributes=infra_node.attributes
             | {"commons_DOMLElement::name": infra_node.name},
             associations=infra_node.associations
-            | {nifacereln: set(infra_node.network_interfaces.keys())},
+            | (
+                {nifacereln: set(infra_node.network_interfaces.keys())}
+                if infra_node.network_interfaces
+                else {}
+            ),
         )
         niface_elems = {
             nifacen: DOMLElement(
